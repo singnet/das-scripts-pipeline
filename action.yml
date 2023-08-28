@@ -4,7 +4,7 @@ inputs:
   job-image-namespace:
     description: "Job image namespace"
     required: false
-    default: "" #
+    default: "adarlan" #
   job-image-version-semver:
     description: "Job image version (semver)"
     required: false
@@ -33,12 +33,12 @@ outputs: {}
 runs:
   using: "composite"
   env:
-    JOB_IMAGE_VERSION_SEMVER: v1.0.29
+    JOB_IMAGE_VERSION_SEMVER: ${{ inputs.job-image-version-semver }}
 
-    MAIN_BRANCH: "main"
-    VERSION_STRATEGY: none
-    VERSION_REQUIRE_CONFIRMATION: "true"
-    VERSION_VARIABLE_NAME: VERSION
+    MAIN_BRANCH: ${{ inputs.main-branch }}
+    VERSION_STRATEGY: ${{ inputs.version-strategy }}
+    VERSION_REQUIRE_CONFIRMATION: ${{ inputs.version-require-confirmation }}
+    VERSION_VARIABLE_NAME: ${{ inputs.version }}
   steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
