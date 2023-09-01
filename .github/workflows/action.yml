@@ -1,0 +1,60 @@
+name: Versioning
+
+on:
+  workflow_call:
+    inputs:
+      job-image-namespace:
+        description: "Job image namespace"
+        required: false
+        type: string
+      job-image-version-semver:
+        description: "Job image version (semver)"
+        required: false
+        type: string
+      main-branch:
+        description: "Main branch"
+        required: false
+        type: string
+      version-tag-regex-pattern:
+        description: "Version tag regex pattern"
+        required: false
+        type: string
+      version-strategy:
+        description: "Version strategy"
+        required: false
+        default: "none"
+        type: string
+      version-require-confirmation:
+        description: "Version require confirmation"
+        required: false
+        type: string
+      version:
+        description: "Version variable name"
+        required: false
+        type: string
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    container:
+      image: "${{ inputs.job-image-namespace }}/semantic-versioning:${{ inputs.job-image-version-semver }}"
+      env:
+        JOB_IMAGE_VERSION_SEMVER: ${{ inputs.job-image-version-semver }}
+        MAIN_BRANCH: ${{ inputs.main-branch }}
+        VERSION_STRATEGY: ${{ inputs.version-strategy }}
+        VERSION_REQUIRE_CONFIRMATION: ${{ inputs.version-require-confirmation }}
+        VERSION_VARIABLE_NAME: VERSION
+        VERSION: ${{ inputs.version }}
+        VERSION_TAG_REGEX_PATTERN: ${{ inputs.version-tag-regex-pattern }}
+        GITHUB_ACTOR: ${{ github.GITHUB_ACTOR }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_SERVER: github.com
+        GITHUB_REPOSITORY: ${{ github.GITHUB_REPOSITORY }}
+        GITHUB_USER_NAME: levisingularity
+        GITHUB_USER_EMAIL: rafael.levi@singularitynet.io
+        GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}
+        GITHUB_SHA: ${{ github.GITHUB_SHA }}
+        GITHUB_WORKFLOW: ${{ github.GITHUB_WORKFLOW }}
+    steps:
+      - name: Semantic Versioning
+        run: semantic-versioning.sh bump-version-from-variable-value

@@ -1,22 +1,22 @@
 #!/bin/bash
 set -e
 
-_section () {
+_section() {
     Message="${@}"
     echo "_____________________________________________________________________________"
     echo "${Message^^}"
 }
 
-_info () {
+_info() {
     echo "[INFO] $@"
 }
 
-_error () {
+_error() {
     echo "[ERROR] $@" >&2
     exit 1
 }
 
-_test () {
+_test() {
     if [ "$1" = "_test" ]; then
         _section "Testing function"
         Command="${1}"
@@ -29,14 +29,14 @@ _test () {
     fi
 }
 
-_var () {
+_var() {
     VariableName="${1}"
     VariableValue="${!VariableName}"
     _info "${VariableName}: ${VariableValue}"
 }
 
 CurrentFunctionName="$1"
-_expose () {
+_expose() {
     FunctionName="$1"
     if [ "$FunctionName" = "$CurrentFunctionName" ]; then
         _var FunctionName
@@ -44,7 +44,7 @@ _expose () {
     fi
 }
 
-_get_version_without_prefix () {
+_get_version_without_prefix() {
     VersionWithPrefix="${1}"
     Prefix="${2}"
     VersionWithoutPrefix="${VersionWithPrefix#${Prefix}}"
@@ -54,7 +54,7 @@ _test "_get_version_without_prefix v7.2.0 v" "7.2.0"
 _test "_get_version_without_prefix vx12.8.1 vx" "12.8.1"
 _test "_get_version_without_prefix foo34.6.123 foo" "34.6.123"
 
-_get_version_number () {
+_get_version_number() {
     Part="${1}"
     VersionWithPrefix="${2}"
     Prefix="${3}"
@@ -74,78 +74,79 @@ _test "_get_version_number major foo34.6.123 foo" "34"
 _test "_get_version_number minor bar-3.233.23 bar-" "233"
 _test "_get_version_number patch qux-v903.67.9 qux-v" "9"
 
-_get_major_number () {
+_get_major_number() {
     Prefix="${1}"
     VersionWithPrefix="${2}"
     _get_version_number "major" "${VersionWithPrefix}" "${Prefix}"
 }
 _test "_get_major_number v v1.2.3" "1"
 
-_get_minor_number () {
+_get_minor_number() {
     Prefix="${1}"
     VersionWithPrefix="${2}"
     _get_version_number "minor" "${VersionWithPrefix}" "${Prefix}"
 }
 _test "_get_minor_number v v1.2.3" "2"
 
-_get_patch_number () {
+_get_patch_number() {
     Prefix="${1}"
     VersionWithPrefix="${2}"
     _get_version_number "patch" "${VersionWithPrefix}" "${Prefix}"
 }
 _test "_get_patch_number v v1.2.3" "3"
 
-_init () {
+_init() {
     _section "Github Pipeline Template for Semantic Versioning"
-    _var CI_SERVER_HOST
-    _var CI_PROJECT_PATH
-    _var CI_COMMIT_BRANCH
-    _var CI_COMMIT_SHA
-    _var CI_JOB_NAME
+    _var GITHUB_SERVER
+    _var GITHUB_REPOSITORY
+    _var GITHUB_REF_NAME
+    _var GITHUB_SHA
+    _var GITHUB_WORKFLOW
     _var VERSION_TAG_REGEX_PATTERN
     _var VERSION_STRATEGY
     _var VERSION_REQUIRE_CONFIRMATION
+    _var GITHUB_ACTOR
 
     _section "Cloning repository"
-    git clone "${CI_REPOSITORY_URL}" /clone
+    git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@${GITHUB_SERVER}/${GITHUB_REPOSITORY}.git" /clone
     cd /clone
 
-    if [ "$CI_COMMIT_BRANCH" = "" ]; then
+    if [ "$GITHUB_REF_NAME" = "" ]; then
         _error "This pipeline is not running on a branch"
     fi
 
-    if [ "$CI_COMMIT_BRANCH" != "$(git rev-parse --abbrev-ref HEAD)" ]; then
+    if [ "$GITHUB_REF_NAME" != "$(git rev-parse --abbrev-ref HEAD)" ]; then
         _error "This pipeline is not running on the main branch"
     fi
 
-    if [ "${CI_COMMIT_SHA}" != "$(git log --pretty=format:'%H' -n 1)" ]; then
+    if [ "${GITHUB_SHA}" != "$(git log --pretty=format:'%H' -n 1)" ]; then
         _error "This pipeline is not running on the main branch last commit"
     fi
 }
 
-_add_write_repository_permission () {
+_add_write_repository_permission() {
     _section "Adding permission to push tags in repository"
 
-    _var GITLAB_USER_NAME
-    _var GITLAB_USER_EMAIL
-    if [ "${GITLAB_USER_NAME}" = "" ] \
-    || [ "${GITLAB_USER_EMAIL}" = "" ] \
-    || [ "${GITLAB_USER_WRITE_REPOSITORY_TOKEN}" = "" ]; then
+    _var GITHUB_USER_NAME
+    _var GITHUB_USER_EMAIL
+    if [ "${GITHUB_USER_NAME}" = "" ] ||
+        [ "${GITHUB_USER_EMAIL}" = "" ] ||
+        [ "${GITHUB_TOKEN}" = "" ]; then
 
         _info "Check that the following variables are set:"
-        _info "- GITLAB_USER_NAME"
-        _info "- GITLAB_USER_EMAIL"
-        _info "- GITLAB_USER_WRITE_REPOSITORY_TOKEN"
+        _info "- GITHUB_USER_NAME"
+        _info "- GITHUB_USER_EMAIL"
+        _info "- GITHUB_TOKEN"
         _error "Missing write repository permission"
     fi
 
-    git config user.name "${GITLAB_USER_NAME}"
-    git config user.email "${GITLAB_USER_EMAIL}"
-    Url="https://${GITLAB_USER_NAME}:${GITLAB_USER_WRITE_REPOSITORY_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    git config user.name "${GITHUB_USER_NAME}"
+    git config user.email "${GITHUB_USER_EMAIL}"
+    Url="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@${GITHUB_SERVER}/${GITHUB_REPOSITORY}.git"
     git remote set-url origin "${Url}"
 }
 
-_add_or_move_tag () {
+_add_or_move_tag() {
     Tag="${1}"
     Message="${2}"
 
@@ -160,22 +161,22 @@ _add_or_move_tag () {
     git push origin "${Tag}"
 }
 
-_delete_tag () {
+_delete_tag() {
     Tag="${1}"
     _info "Deleting tag $Tag"
     git tag -d "${Tag}"
     git push --delete origin "${Tag}"
 }
 
-_bump_version () {
+_bump_version() {
     _section "Bumping version"
 
-    if (( NextMajorNumber < PreviousMajorNumber )); then _error "The next version cannot be less than the previous version"; fi
-    if (( NextMajorNumber == PreviousMajorNumber )); then
-        if (( NextMinorNumber < PreviousMinorNumber )); then _error "The next version cannot be less than the previous version"; fi
-        if (( NextMinorNumber == PreviousMinorNumber )); then
-            if (( NextPatchNumber < PreviousPatchNumber )); then _error "The next version cannot be less than the previous version"; fi
-            if (( NextPatchNumber == PreviousPatchNumber )); then _error "The next version cannot be the same as the previous version"; fi
+    if ((NextMajorNumber < PreviousMajorNumber)); then _error "The next version cannot be less than the previous version"; fi
+    if ((NextMajorNumber == PreviousMajorNumber)); then
+        if ((NextMinorNumber < PreviousMinorNumber)); then _error "The next version cannot be less than the previous version"; fi
+        if ((NextMinorNumber == PreviousMinorNumber)); then
+            if ((NextPatchNumber < PreviousPatchNumber)); then _error "The next version cannot be less than the previous version"; fi
+            if ((NextPatchNumber == PreviousPatchNumber)); then _error "The next version cannot be the same as the previous version"; fi
         fi
     fi
 
@@ -202,7 +203,7 @@ _bump_version () {
     _add_or_move_tag ${NextMajorTag} "${Msg}"
 }
 
-_resolve_version_tag_prefix () {
+_resolve_version_tag_prefix() {
     _section "Resolving version tag prefix"
     _var VERSION_TAG_REGEX_PATTERN
 
@@ -213,14 +214,14 @@ _resolve_version_tag_prefix () {
     # if [[ $VERSION_TAG_REGEX_PATTERN != *\d+\.\d+\.\d+$/ ]]; then
     #     _error "Invalid VERSION_TAG_REGEX_PATTERN"
     # fi
-    
+
     without_prefix="${VERSION_TAG_REGEX_PATTERN#/^}"
     VersionTagPrefix="${without_prefix%\\d+\\.\\d+\\.\\d+$/}"
     _var VersionTagPrefix
     # TODO validate VersionTagPrefix
 }
 
-_resolve_previous_version_vars () {
+_resolve_previous_version_vars() {
     _section "Resolving previous version"
 
     VersionTags=$(git tag -l ${VersionTagPrefix}*\.*\.* --sort=-version:refname)
@@ -229,7 +230,7 @@ _resolve_previous_version_vars () {
     else
         PreviousVersionTag=$(echo $VersionTags | cut -f1 -d" ")
     fi
-    
+
     PreviousMajorNumber="$(_get_major_number $VersionTagPrefix $PreviousVersionTag)"
     PreviousMinorNumber="$(_get_minor_number $VersionTagPrefix $PreviousVersionTag)"
     PreviousPatchNumber="$(_get_patch_number $VersionTagPrefix $PreviousVersionTag)"
@@ -247,9 +248,9 @@ _resolve_previous_version_vars () {
     _var PreviousPatchTag
 }
 
-_resolve_next_version_vars_from_version () {
+_resolve_next_version_vars_from_version() {
     _section "Resolving next version"
-    
+
     NextVersionTag="${1}"
     # TODO validate version tag
 
@@ -270,7 +271,7 @@ _resolve_next_version_vars_from_version () {
     _var NextPatchTag
 }
 
-_resolve_next_version_vars_from_change_level () {
+_resolve_next_version_vars_from_change_level() {
     _section "Resolving next version from change level"
 
     ChangeLevel="${1}"
@@ -305,7 +306,7 @@ _resolve_next_version_vars_from_change_level () {
     _var NextPatchTag
 }
 
-bump-version-from-change-level () {
+bump-version-from-change-level() {
     _init
     _var CHANGE_LEVEL
     _resolve_version_tag_prefix
@@ -316,7 +317,7 @@ bump-version-from-change-level () {
 }
 _expose bump-version-from-change-level
 
-bump-version-from-variable-value () {
+bump-version-from-variable-value() {
     _init
     _var VERSION_VARIABLE_NAME
     _resolve_version_tag_prefix
@@ -327,23 +328,23 @@ bump-version-from-variable-value () {
 }
 _expose bump-version-from-variable-value
 
-bump-version-from-properties-file () {
+bump-version-from-properties-file() {
     _init
     _var VERSION_FILE
     _var VERSION_FILE_PROPERTY
     _var VERSION_FILE_TYPE
-    
+
     _error "Not implemented: $0"
 }
 # TODO _expose bump-version-from-properties-file
 
-bump-version-from-commit-messages () {
+bump-version-from-commit-messages() {
     _init
     _error "Not implemented: $0"
 }
 # TODO _expose bump-version-from-commit-messages
 
-remove-test-version-tags () {
+remove-test-version-tags() {
     _init
     _resolve_version_tag_prefix
     _add_write_repository_permission
