@@ -174,8 +174,8 @@ _bump_release() {
     Msg="Bump release: ${ReleaseName}"
     _info "$Msg"
 
-    curl -X POST "https://api.github.com/repos/$OWNER/$REPO/releases" \
-        -H "Authorization: token $TOKEN" \
+    curl -X POST "https://api.github.com/repos/$GITHUB_ACTOR/$GITHUB_REPOSITORY/releases" \
+        -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
         -d '{
     "tag_name": "'"$TagName"'",
