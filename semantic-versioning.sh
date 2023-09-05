@@ -171,9 +171,7 @@ _delete_tag() {
 _bump_release() {
     _section "Bumping release"
 
-    TagName="${NextMajorTag}.${NextMinorTag}.${NextPatchTag}"
-    ReleaseName="Release ${TagName}"
-    Msg="Bump release: Release ${TagName}"
+    Msg="Bump release: ${ReleaseName}"
     _info "$Msg"
 
     curl -X POST "https://api.github.com/repos/$OWNER/$REPO/releases" \
@@ -188,7 +186,7 @@ _bump_release() {
 
 _resolve_release() {
     ReleaseNote=""
-    ReleaseName=""
+    ReleaseName="Release ${TagName}"
 
     while read -r Line; do
         ReleaseNote+="* ${Line#* }\\n"
@@ -292,6 +290,8 @@ _resolve_next_version_vars_from_version() {
     NextMinorTag="${VersionTagPrefix}${NextMajorNumber}.${NextMinorNumber}"
     NextPatchTag="${VersionTagPrefix}${NextMajorNumber}.${NextMinorNumber}.${NextPatchNumber}"
 
+    TagName="${NextMajorTag}.${NextMinorTag}.${NextPatchTag}"
+
     _var NextVersionTag
     _var NextMajorNumber
     _var NextMinorNumber
@@ -299,6 +299,7 @@ _resolve_next_version_vars_from_version() {
     _var NextMajorTag
     _var NextMinorTag
     _var NextPatchTag
+    _var TagName
 }
 
 _resolve_next_version_vars_from_change_level() {
