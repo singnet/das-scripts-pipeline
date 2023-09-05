@@ -171,16 +171,31 @@ _delete_tag() {
 _bump_release() {
     _section "Bumping release"
 
-    Msg="Bump release: Release ${NextPatchTag}"
+    TagName="${NextMajorTag}.${NextMinorTag}.${NextPatchTag}"
+    ReleaseName="Release ${TagName}"
+    Msg="Bump release: Release ${TagName}"
     _info "$Msg"
 
+    curl -X POST "https://api.github.com/repos/$OWNER/$REPO/releases" \
+        -H "Authorization: token $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
+    "tag_name": "'"$TagName"'",
+    "name": "'"$ReleaseName"'",
+    "body": "'"$ReleaseNote"'"
+  }'
+}
+
+_resolve_release() {
     ReleaseNote=""
+    ReleaseName=""
 
     while read -r Line; do
         ReleaseNote+="* ${Line#* }\\n"
     done <<<"$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0)..HEAD)"
 
     _var ReleaseNote
+    _var ReleaseName
 }
 
 _bump_version() {
@@ -340,6 +355,7 @@ bump-version-from-variable-value() {
     _resolve_next_version_vars_from_version "${!VERSION_VARIABLE_NAME}"
     _add_write_repository_permission
     _bump_version
+    _resolve_release
     _bump_release
 }
 _expose bump-version-from-variable-value
