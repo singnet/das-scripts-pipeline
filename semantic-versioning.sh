@@ -168,6 +168,21 @@ _delete_tag() {
     git push --delete origin "${Tag}"
 }
 
+_bump_release() {
+    _section "Bumping release"
+
+    Msg="Bump release: Release ${NextPatchTag}"
+    _info "$Msg"
+
+    ReleaseNote=""
+
+    while read -r Line; do
+        ReleaseNote+="* ${Line#* }\\n"
+    done <<<"$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0)..HEAD)"
+
+    _var ReleaseNote
+}
+
 _bump_version() {
     _section "Bumping version"
 
@@ -325,6 +340,7 @@ bump-version-from-variable-value() {
     _resolve_next_version_vars_from_version "${!VERSION_VARIABLE_NAME}"
     _add_write_repository_permission
     _bump_version
+    _bump_release
 }
 _expose bump-version-from-variable-value
 
