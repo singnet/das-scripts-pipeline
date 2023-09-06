@@ -200,6 +200,10 @@ _resolve_release() {
         ReleaseNote+="* ${Line#* }\\n"
     done <<<"$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0)..HEAD)"
 
+    if $ReleaseNote == ""; then
+        _error "Could not determine the release note"
+    fi
+
     _var ReleaseNote
     _var ReleaseName
 }
