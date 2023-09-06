@@ -178,7 +178,7 @@ _bump_release() {
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
         -d '{
-    "tag_name": "'"$TagName"'",
+    "tag_name": "'"$NextPatchTag"'",
     "name": "'"$ReleaseName"'",
     "body": "'"$ReleaseNote"'"
   }'
@@ -186,7 +186,7 @@ _bump_release() {
 
 _resolve_release() {
     ReleaseNote=""
-    ReleaseName="Release ${TagName}"
+    ReleaseName="Release ${NextPatchTag}"
 
     while read -r Line; do
         ReleaseNote+="* ${Line#* }\\n"
@@ -290,8 +290,6 @@ _resolve_next_version_vars_from_version() {
     NextMinorTag="${VersionTagPrefix}${NextMajorNumber}.${NextMinorNumber}"
     NextPatchTag="${VersionTagPrefix}${NextMajorNumber}.${NextMinorNumber}.${NextPatchNumber}"
 
-    TagName="${NextMajorTag}.${NextMinorTag}.${NextPatchTag}"
-
     _var NextVersionTag
     _var NextMajorNumber
     _var NextMinorNumber
@@ -299,7 +297,6 @@ _resolve_next_version_vars_from_version() {
     _var NextMajorTag
     _var NextMinorTag
     _var NextPatchTag
-    _var TagName
 }
 
 _resolve_next_version_vars_from_change_level() {

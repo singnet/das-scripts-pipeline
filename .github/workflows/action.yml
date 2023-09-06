@@ -37,7 +37,7 @@ jobs:
   tag:
     runs-on: ubuntu-latest
     container:
-      image: "${{ inputs.job-image-namespace }}/semantic-versioning:${{ inputs.job-image-version-semver }}"
+      image: "${{ inputs.job-image-namespace }}/das:${{ inputs.job-image-version-semver }}"
       env:
         JOB_IMAGE_VERSION_SEMVER: ${{ inputs.job-image-version-semver }}
         MAIN_BRANCH: ${{ inputs.main-branch }}
