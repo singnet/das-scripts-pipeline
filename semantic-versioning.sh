@@ -106,6 +106,7 @@ _init() {
     _var VERSION_STRATEGY
     _var VERSION_REQUIRE_CONFIRMATION
     _var GITHUB_ACTOR
+    _var GITHUB_REPOSITORY_OWNER
 
     _section "Cloning repository"
     git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@${GITHUB_SERVER}/${GITHUB_REPOSITORY}.git" /clone
@@ -174,13 +175,20 @@ _bump_release() {
     Msg="Bump release: ${ReleaseName}"
     _info "$Msg"
 
-    curl -X POST "https://api.github.com/repos/$GITHUB_ACTOR/$GITHUB_REPOSITORY/releases" \
+    _info "https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
+
+    curl -X POST "https://api.github.com/repos/$GITHUB_REPOSITORY/releases" \
         -H "Authorization: token $GITHUB_TOKEN" \
-        -H "Content-Type: application/json" \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
         -d '{
     "tag_name": "'"$NextPatchTag"'",
+    "target_commitish": "main",
     "name": "'"$ReleaseName"'",
-    "body": "'"$ReleaseNote"'"
+    "body": "'"$ReleaseNote"'",
+    "draft": false,
+    "prerelease": false,
+    "generate_release_notes": false
   }'
 }
 
