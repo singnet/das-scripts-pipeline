@@ -185,10 +185,9 @@ _bump_release() {
     "tag_name": "'"$NextPatchTag"'",
     "target_commitish": "main",
     "name": "'"$ReleaseName"'",
-    "body": "'"$ReleaseNote"'",
     "draft": false,
     "prerelease": false,
-    "generate_release_notes": false
+    "generate_release_notes": true
   }'
 }
 
