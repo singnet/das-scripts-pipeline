@@ -174,6 +174,7 @@ _bump_release() {
 
     Msg="Bump release: ${ReleaseName}"
     _info "$Msg"
+    _info "$ReleaseNote"
 
     _info "https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
 
@@ -187,7 +188,8 @@ _bump_release() {
     "name": "'"$ReleaseName"'",
     "draft": false,
     "prerelease": false,
-    "generate_release_notes": true
+    "body": "'"$ReleaseNote"'",
+    "generate_release_notes": false
   }'
 }
 
@@ -363,8 +365,8 @@ bump-version-from-variable-value() {
     _resolve_previous_version_vars
     _resolve_next_version_vars_from_version "${!VERSION_VARIABLE_NAME}"
     _add_write_repository_permission
-    _bump_version
     _resolve_release
+    _bump_version
     _bump_release
 }
 _expose bump-version-from-variable-value
