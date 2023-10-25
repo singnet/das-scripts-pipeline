@@ -184,7 +184,7 @@ _bump_release() {
         -H "X-GitHub-Api-Version: 2022-11-28" \
         -d '{
     "tag_name": "'"$NextPatchTag"'",
-    "target_commitish": "main",
+    "target_commitish": "'"$MAIN_BRANCH"'",
     "name": "'"$ReleaseName"'",
     "draft": false,
     "prerelease": false,
