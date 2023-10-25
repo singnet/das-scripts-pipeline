@@ -184,7 +184,7 @@ _bump_release() {
         -H "X-GitHub-Api-Version: 2022-11-28" \
         -d '{
     "tag_name": "'"$NextPatchTag"'",
-    "target_commitish": "main",
+    "target_commitish": "'"$MAIN_BRANCH"'",
     "name": "'"$ReleaseName"'",
     "draft": false,
     "prerelease": false,
@@ -193,19 +193,31 @@ _bump_release() {
   }'
 }
 
-_resolve_release() {
+_determine_release_note_from_commits() {
     ReleaseNote=""
-    ReleaseName="Release ${NextPatchTag}"
 
-    while read -r Line; do
-        ReleaseNote+="* ${Line#* }\\n"
-    done <<<"$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0)..HEAD)"
-
-    if $ReleaseNote == ""; then
-        _error "Could not determine the release note"
+    if [[ "$1" != '' ]]; then
+        while IFS= read -r Line; do
+            ReleaseNote+="* ${Line#* }\\n"
+        done <<<"$1"
     fi
 
     _var ReleaseNote
+}
+
+_resolve_release() {
+    TAGS="$(git tag --list)"
+
+    COMMIT="$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0 2>/dev/null)..HEAD)"
+
+    if [ -z "$COMMIT" ] && [ -z "$TAGS" ]; then
+        COMMIT="$(git log --oneline --abbrev-commit --no-merges)"
+    fi
+
+    ReleaseName="Release ${NextPatchTag}"
+
+    _determine_release_note_from_commits "$COMMIT"
+
     _var ReleaseName
 }
 
