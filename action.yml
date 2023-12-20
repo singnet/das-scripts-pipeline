@@ -17,12 +17,12 @@ inputs:
   icon:
     required: false
     type: string
-env:
-  MATTERMOST_WEBHOOK_URL: ${{ inputs.webhook-url }}
-  MATTERMOST_MESSAGE: ${{ inputs.message }}
-  MATTERMOST_CHANNEL: ${{ inputs.channel }}
-  MATTERMOST_USERNAME: ${{ inputs.username }}
-  MATTERMOST_ICON: ${{ inputs.icon }}
 runs:
   using: "docker"
   image: "Dockerfile"
+  env:
+    MATTERMOST_WEBHOOK_URL: ${{ inputs.webhook-url }}
+    MATTERMOST_MESSAGE: ${{ inputs.message }}
+    MATTERMOST_CHANNEL: ${{ inputs.channel }}
+    MATTERMOST_USERNAME: ${{ inputs.username }}
+    MATTERMOST_ICON: ${{ inputs.icon }}
