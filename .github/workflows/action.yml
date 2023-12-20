@@ -58,3 +58,12 @@ jobs:
     steps:
       - name: Semantic Versioning
         run: semantic-versioning.sh bump-version-from-variable-value
+
+  notify-mattermost:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notity Mattermost
+        uses: singnet/integration-github-mattermost@master
+        with:
+          webhook-url: "https://chat.singularitynet.io/hooks/an9dyk9xb3f77gz7sxabbo9zcc"
+          message: "testing workflow"
