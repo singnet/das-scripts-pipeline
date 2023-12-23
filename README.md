@@ -45,3 +45,34 @@ This workflow leverages a Docker container to perform the version tagging proces
 - `job-image-version-semver`: The version of the Docker image to use.
 
 That's it! With this workflow in place, you can trigger the workflow manually from the GitHub Actions UI by providing the desired version value.
+
+### Integration Github Mattermost
+
+This workflow utilizes the action available in the repository [singnet/integration-github-mattermost](https://github.com/singnet/integration-github-mattermost) to notify a Mattermost channel about the availability of a new version.
+
+#### Environment Variables
+
+| Variable               | Purpose                                                                                                                                              | Optional |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| MATTERMOST_WEBHOOK_URL | The Mattermost Incoming Webhook URL.                                                                                                                 | No       |
+| MATTERMOST_CHANNEL     | The name of the channel where you want to post messages. If not specified, the message will be posted in the channel set up in the webhook creation. | Yes      |
+| MATTERMOST_USERNAME    | The name of the sender of the message, for example, "GitHubAction".                                                                                  | Yes      |
+| MATTERMOST_ICON        | The user or bot icon shown with the Mattermost message.                                                                                              | Yes      |
+
+## Action Example
+
+```yaml
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Mattermost
+        uses: singnet/integration-github-mattermost@master
+        env:
+          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          MATTERMOST_CHANNEL: ${{ secrets.MATTERMOST_CHANNEL }}
+          MATTERMOST_USERNAME: "GitHubAction"
+          MATTERMOST_ICON: "https://example.com/icon.png"
+```
