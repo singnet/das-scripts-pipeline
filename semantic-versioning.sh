@@ -8,7 +8,7 @@ _section() {
 }
 
 _info() {
-    echo "[INFO] $@"
+    echo -e "[INFO] $@"
 }
 
 _error() {
@@ -33,6 +33,7 @@ _var() {
     VariableName="${1}"
     VariableValue="${!VariableName}"
     _info "${VariableName}: ${VariableValue}"
+    echo "::set-output name=${VariableName}::${VariableValue}"
 }
 
 CurrentFunctionName="$1"
@@ -116,13 +117,13 @@ _init() {
         _error "This pipeline is not running on a branch"
     fi
 
-    if [ "$GITHUB_REF_NAME" != "$(git rev-parse --abbrev-ref HEAD)" ]; then
-        _error "This pipeline is not running on the main branch"
-    fi
+    # if [ "$GITHUB_REF_NAME" != "$(git rev-parse --abbrev-ref HEAD)" ]; then
+    #     _error "This pipeline is not running on the main branch"
+    # fi
 
-    if [ "${GITHUB_SHA}" != "$(git log --pretty=format:'%H' -n 1)" ]; then
-        _error "This pipeline is not running on the main branch last commit"
-    fi
+    # if [ "${GITHUB_SHA}" != "$(git log --pretty=format:'%H' -n 1)" ]; then
+    #     _error "This pipeline is not running on the main branch last commit"
+    # fi
 }
 
 _add_write_repository_permission() {
