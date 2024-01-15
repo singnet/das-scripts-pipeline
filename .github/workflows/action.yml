@@ -36,6 +36,7 @@ on:
         description: "Library's name"
         required: false
         type: string
+        default: "(no library)"
     secrets:
       MATTERMOST_WEBHOOK_URL:
         required: true
