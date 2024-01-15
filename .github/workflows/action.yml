@@ -84,6 +84,7 @@ jobs:
 
             New Version: ${{ needs.tag.outputs.version }}
             Repository: ${{ needs.tag.outputs.repository }}
+            Library: ${{ inputs.library }}
 
             Changes:
             ${{ needs.tag.outputs.release-note }}
