@@ -32,6 +32,10 @@ on:
         description: "Version variable name"
         required: false
         type: string
+      library:
+        description: "Library's name"
+        required: false
+        type: string
     secrets:
       MATTERMOST_WEBHOOK_URL:
         required: true
