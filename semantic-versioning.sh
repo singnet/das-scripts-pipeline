@@ -113,6 +113,12 @@ _init() {
     git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@${GITHUB_SERVER}/${GITHUB_REPOSITORY}.git" /clone
     cd /clone
 
+    git checkout $MAIN_BRANCH
+
+    # _info "Connecting to github cli"
+
+    # echo $GITHUB_TOKEN | gh auth login --with-token
+
     if [ "$GITHUB_REF_NAME" = "" ]; then
         _error "This pipeline is not running on a branch"
     fi
@@ -196,11 +202,20 @@ _bump_release() {
 
 _determine_release_note_from_commits() {
     ReleaseNote=""
+    PrCount=0
 
     if [[ "$1" != '' ]]; then
-        while IFS= read -r Line; do
-            ReleaseNote+="* ${Line#* }\\n"
-        done <<<"$1"
+        PrList=$(echo "$1" | awk -F'#|)' '{ for (i=2; i<NF; i+=2) print $i }')
+        for PrId in $PrList
+        do
+            PrCount+=1
+            PrDetails=$(gh pr view $PrId --json title,body)
+            Title=$(echo "$PrDetails" | jq -r '.title')
+            Body=$(echo "$PrDetails" | jq -r '.body')
+            ReleaseNote+="($PrCount) $Title\n\n\t$Body\n\n"
+        done
+    else
+        ReleaseNote="(no changes)"
     fi
 
     _var ReleaseNote
