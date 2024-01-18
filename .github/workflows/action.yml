@@ -37,6 +37,10 @@ on:
         required: false
         type: string
         default: ""
+      changelog:
+        description: "Version changelog"
+        required: true
+        type: string
     secrets:
       MATTERMOST_WEBHOOK_URL:
         required: true
@@ -64,7 +68,7 @@ jobs:
         GITHUB_SHA: ${{ github.GITHUB_SHA }}
         GITHUB_WORKFLOW: ${{ github.GITHUB_WORKFLOW }}
     outputs:
-      release-note: ${{ steps.semantic-versioning.outputs.ReleaseNote }}
+      # release-note: ${{ steps.semantic-versioning.outputs.ReleaseNote }}
       version: ${{ steps.semantic-versioning.outputs.NextPatchTag }}
       repository: ${{ steps.semantic-versioning.outputs.GITHUB_REPOSITORY }}
     steps:
@@ -81,7 +85,7 @@ jobs:
           version="${{ needs.tag.outputs.version }}"
           repository="${{ needs.tag.outputs.repository }}"
           library="${{ inputs.library }}"
-          releaseNote="${{ needs.tag.outputs.release-note }}"
+          releaseNote="${{ inputs.changelog }}"
 
           message="New version available\n\nNew Version: $version\nRepository: $repository"
 
