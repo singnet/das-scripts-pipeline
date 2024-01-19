@@ -1,3 +1,4 @@
+---
 name: Versioning
 
 on:
@@ -97,11 +98,9 @@ jobs:
             message="$message\nChanges:\n$releaseNote"
           fi
 
-          echo "$message" > message.txt
+          echo '{"text": "'"$message"'"}' > mattermost.json
 
       - name: Notify Mattermost
         uses: singnet/integration-github-mattermost@master
         with:
           webhook-url: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          message: |
-            $(cat message.txt)
