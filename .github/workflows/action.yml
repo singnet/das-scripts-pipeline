@@ -88,11 +88,14 @@ jobs:
           library="${{ inputs.library }}"
           releaseNote="${{ inputs.changelog }}"
 
-          message="New version available\n\nNew Version: $version\nRepository: $repository"
+          message=""
 
           if [ -n "$library" ]; then
-            message="$message\nLibrary: $library"
+            message="Library: $library\n\n"
           fi
+
+          message="New version available: $version\nRepository: https://github.com/$repository/releases/tag/$version"
+
 
           if [ -n "$releaseNote" ]; then
             message="$message\nChanges:\n$releaseNote"
