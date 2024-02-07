@@ -37,11 +37,11 @@ on:
         description: "Library's name"
         required: false
         type: string
-        default: ""
       changelog:
-        description: "Version changelog"
-        required: true
+        description: "Changelog"
+        required: false
         type: string
+        default: CHANGELOG
     secrets:
       MATTERMOST_WEBHOOK_URL:
         required: true
@@ -81,12 +81,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: tag
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Create mattermost message
         run: |
           version="${{ needs.tag.outputs.version }}"
           repository="${{ needs.tag.outputs.repository }}"
           library="${{ inputs.library }}"
-          releaseNote="${{ inputs.changelog }}"
+          releaseNote=$([ -e ${{ inputs.changelog }} ] && cat ${{ inputs.changelog }} || echo "")
 
           message=""
 
@@ -94,14 +97,13 @@ jobs:
             message="Library: $library\n\n"
           fi
 
-          message="New version available: $version\nRepository: https://github.com/$repository/releases/tag/$version"
-
+          message="$messageNew version available: $version\nRepository: https://github.com/$repository/releases/tag/$version"
 
           if [ -n "$releaseNote" ]; then
             message="$message\nChanges:\n$releaseNote"
           fi
 
-          echo '{"text": "'"$message"'"}' > mattermost.json
+          '{"text": "'"$message"'"}' > mattermost.json
 
       - name: Notify Mattermost
         uses: singnet/integration-github-mattermost@master
