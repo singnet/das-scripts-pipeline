@@ -97,7 +97,7 @@ jobs:
             message="Library: $library\n\n"
           fi
 
-          message="$messageNew version available: $version\nRepository: https://github.com/$repository/releases/tag/$version"
+          message="${message}New version available: $version\nRepository: https://github.com/$repository/releases/tag/$version"
 
           if [ -n "$releaseNote" ]; then
             message="$message\nChanges:\n$releaseNote"
