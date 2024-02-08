@@ -108,6 +108,7 @@ _init() {
     _var VERSION_REQUIRE_CONFIRMATION
     _var GITHUB_ACTOR
     _var GITHUB_REPOSITORY_OWNER
+    _var RELEASE_NOTE
 
     _section "Cloning repository"
     git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@${GITHUB_SERVER}/${GITHUB_REPOSITORY}.git" /clone
@@ -200,14 +201,19 @@ _bump_release() {
   }'
 }
 
+_determine_release_note_from_env() {
+    ReleaseNote="$RELEASE_NOTE"
+
+    _var ReleaseNote
+}
+
 _determine_release_note_from_commits() {
     ReleaseNote=""
     PrCount=0
 
     if [[ "$1" != '' ]]; then
         PrList=$(echo "$1" | awk -F'#|)' '{ for (i=2; i<NF; i+=2) print $i }')
-        for PrId in $PrList
-        do
+        for PrId in $PrList; do
             PrCount+=1
             PrDetails=$(gh pr view $PrId --json title,body)
             Title=$(echo "$PrDetails" | jq -r '.title')
@@ -222,17 +228,21 @@ _determine_release_note_from_commits() {
 }
 
 _resolve_release() {
-    TAGS="$(git tag --list)"
-
-    COMMIT="$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0 2>/dev/null)..HEAD)"
-
-    if [ -z "$COMMIT" ] && [ -z "$TAGS" ]; then
-        COMMIT="$(git log --oneline --abbrev-commit --no-merges)"
-    fi
-
     ReleaseName="Release ${NextPatchTag}"
 
-    _determine_release_note_from_commits "$COMMIT"
+    if [ -z "$RELEASE_NOTE" ]; then
+        TAGS="$(git tag --list)"
+
+        COMMIT="$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0 2>/dev/null)..HEAD)"
+
+        if [ -z "$COMMIT" ] && [ -z "$TAGS" ]; then
+            COMMIT="$(git log --oneline --abbrev-commit --no-merges)"
+        fi
+
+        _determine_release_note_from_commits "$COMMIT"
+    else
+        _determine_release_note_from_env
+    fi
 
     _var ReleaseName
 }
