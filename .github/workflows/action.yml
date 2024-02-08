@@ -89,7 +89,7 @@ jobs:
           version="${{ needs.tag.outputs.version }}"
           repository="${{ needs.tag.outputs.repository }}"
           library="${{ inputs.library }}"
-          releaseNote=$([ -e ${{ inputs.changelog }} ] && cat ${{ inputs.changelog }} || echo "")
+          releaseNote=$([ -e ${{ inputs.changelog }} ] && awk -v ORS='\\n' '1' ${{ inputs.changelog }} || echo "")
 
           message=""
 
@@ -103,7 +103,7 @@ jobs:
             message="$message\nChanges:\n$releaseNote"
           fi
 
-          '{"text": "'"$message"'"}' > mattermost.json
+          echo "{\"text\": \"$message\"}" > mattermost.json
 
       - name: Notify Mattermost
         uses: singnet/integration-github-mattermost@master
