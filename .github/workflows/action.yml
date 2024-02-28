@@ -83,7 +83,7 @@ jobs:
         GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}
         GITHUB_SHA: ${{ github.GITHUB_SHA }}
         GITHUB_WORKFLOW: ${{ github.GITHUB_WORKFLOW }}
-        RELEASE_NOTE: ${{ needs.setup.outputs.release-note }}
+        CHANGELOG_PATH: ${{ inputs.changelog }}
     outputs:
       release-note: ${{ steps.semantic-versioning.outputs.ReleaseNote }}
       version: ${{ steps.semantic-versioning.outputs.NextPatchTag }}

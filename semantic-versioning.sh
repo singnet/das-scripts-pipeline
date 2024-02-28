@@ -108,7 +108,7 @@ _init() {
     _var VERSION_REQUIRE_CONFIRMATION
     _var GITHUB_ACTOR
     _var GITHUB_REPOSITORY_OWNER
-    _var RELEASE_NOTE
+    _var CHANGELOG_PATH
 
     _section "Cloning repository"
     git clone "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@${GITHUB_SERVER}/${GITHUB_REPOSITORY}.git" /clone
@@ -201,48 +201,31 @@ _bump_release() {
   }'
 }
 
-_determine_release_note_from_env() {
-    ReleaseNote="$RELEASE_NOTE"
+_determine_release_note() {
+    ReleaseNote=$([ -e "${CHANGELOG_PATH}" ] && awk -v ORS='\\n' '1' "${CHANGELOG_PATH}" || echo "")
 
     _var ReleaseNote
 }
 
-_determine_release_note_from_commits() {
-    ReleaseNote=""
-    PrCount=0
+_update_changelog() {
+    if [ $NextMajorNumber -gt $PreviousMajorNumber ] || [ $NextMinorNumber -gt $PreviousMinorNumber ]; then
+        _info "Reseting changelog file"
+        _info "${CHANGELOG_PATH}"
 
-    if [[ "$1" != '' ]]; then
-        PrList=$(echo "$1" | awk -F'#|)' '{ for (i=2; i<NF; i+=2) print $i }')
-        for PrId in $PrList; do
-            PrCount+=1
-            PrDetails=$(gh pr view $PrId --json title,body)
-            Title=$(echo "$PrDetails" | jq -r '.title')
-            Body=$(echo "$PrDetails" | jq -r '.body')
-            ReleaseNote+="($PrCount) $Title\n\n\t$Body\n\n"
-        done
+        echo "" >"$CHANGELOG_PATH"
+        git add "$CHANGELOG_PATH"
+        git commit -m "Reset CHANGELOG"
+        git push origin "${MAIN_BRANCH}"
     else
-        ReleaseNote="(no changes)"
+        _info "Skipping reset changelog file"
     fi
-
-    _var ReleaseNote
 }
 
 _resolve_release() {
     ReleaseName="Release ${NextPatchTag}"
 
-    if [ -z "$RELEASE_NOTE" ]; then
-        TAGS="$(git tag --list)"
-
-        COMMIT="$(git log --oneline --abbrev-commit --no-merges $(git describe --tags --abbrev=0 2>/dev/null)..HEAD)"
-
-        if [ -z "$COMMIT" ] && [ -z "$TAGS" ]; then
-            COMMIT="$(git log --oneline --abbrev-commit --no-merges)"
-        fi
-
-        _determine_release_note_from_commits "$COMMIT"
-    else
-        _determine_release_note_from_env
-    fi
+    _determine_release_note
+    _update_changelog
 
     _var ReleaseName
 }
