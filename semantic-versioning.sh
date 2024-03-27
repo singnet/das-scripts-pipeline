@@ -47,10 +47,10 @@ _expose() {
 
 _get_version_without_prefix() {
     VersionWithPrefix="${1}"
-    Prefix="${2}"
-    VersionWithoutPrefix="${VersionWithPrefix#${Prefix}}"
-    echo "${VersionWithoutPrefix}"
+    VersionWithoutPrefix=$(echo "$VersionWithPrefix" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+    echo "$VersionWithoutPrefix"
 }
+
 _test "_get_version_without_prefix v7.2.0 v" "7.2.0"
 _test "_get_version_without_prefix vx12.8.1 vx" "12.8.1"
 _test "_get_version_without_prefix foo34.6.123 foo" "34.6.123"
@@ -58,9 +58,8 @@ _test "_get_version_without_prefix foo34.6.123 foo" "34.6.123"
 _get_version_number() {
     Part="${1}"
     VersionWithPrefix="${2}"
-    Prefix="${3}"
 
-    VersionWithoutPrefix="$(_get_version_without_prefix ${VersionWithPrefix} ${Prefix})"
+    VersionWithoutPrefix="$(_get_version_without_prefix ${VersionWithPrefix})"
 
     major="${VersionWithoutPrefix%%.*}"
     minor="${VersionWithoutPrefix#*.}"
@@ -76,23 +75,20 @@ _test "_get_version_number minor bar-3.233.23 bar-" "233"
 _test "_get_version_number patch qux-v903.67.9 qux-v" "9"
 
 _get_major_number() {
-    Prefix="${1}"
-    VersionWithPrefix="${2}"
-    _get_version_number "major" "${VersionWithPrefix}" "${Prefix}"
+    VersionWithPrefix="${1}"
+    _get_version_number "major" "${VersionWithPrefix}"
 }
 _test "_get_major_number v v1.2.3" "1"
 
 _get_minor_number() {
-    Prefix="${1}"
-    VersionWithPrefix="${2}"
-    _get_version_number "minor" "${VersionWithPrefix}" "${Prefix}"
+    VersionWithPrefix="${1}"
+    _get_version_number "minor" "${VersionWithPrefix}"
 }
 _test "_get_minor_number v v1.2.3" "2"
 
 _get_patch_number() {
-    Prefix="${1}"
-    VersionWithPrefix="${2}"
-    _get_version_number "patch" "${VersionWithPrefix}" "${Prefix}"
+    VersionWithPrefix="${1}"
+    _get_version_number "patch" "${VersionWithPrefix}"
 }
 _test "_get_patch_number v v1.2.3" "3"
 
@@ -285,8 +281,9 @@ _resolve_version_tag_prefix() {
 
 _resolve_previous_version_vars() {
     _section "Resolving previous version"
+    VersionTags=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags |
+        grep -E "$(if [ -z "$VersionTags" ]; then echo "^${VersionTagPrefix}[0-9]+\.[0-9]+\.[0-9]+$"; else echo "^${VersionTags}[0-9]+\.[0-9]+\.[0-9]+$"; fi)" | head -n 1)
 
-    VersionTags=$(git tag -l ${VersionTagPrefix}*\.*\.* --sort=-version:refname)
     if [ "x${VersionTags}" = "x" ]; then
         PreviousVersionTag="${VersionTagPrefix}0.0.0"
     else
